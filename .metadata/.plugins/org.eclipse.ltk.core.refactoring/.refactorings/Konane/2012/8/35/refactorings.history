@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move 5 elements to &apos;Konane/src/Game&apos;&#x0D;&#x0A;- Original project: &apos;Konane&apos;&#x0D;&#x0A;- Destination element: &apos;Konane/src/Game&apos;&#x0D;&#x0A;- Original elements:&#x0D;&#x0A;     Game.java&#x0D;&#x0A;     Main.java&#x0D;&#x0A;     Human.java&#x0D;&#x0A;     Player.java&#x0D;&#x0A;     Tile.java&#x0D;&#x0A;- Update references to refactored element" description="Move compilation units" destination="/src&lt;Game" element1="/src&lt;{Game.java" element2="/src&lt;{Main.java" element3="/src&lt;{Human.java" element4="/src&lt;{Player.java" element5="/src&lt;{Tile.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.move" policy="org.eclipse.jdt.ui.moveResources" qualified="false" references="true" stamp="1346385943711" units="5" version="1.0"/>
+</session>

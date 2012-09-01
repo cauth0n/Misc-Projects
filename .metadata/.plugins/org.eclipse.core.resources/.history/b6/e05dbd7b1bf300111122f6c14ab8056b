@@ -1,0 +1,11 @@
+
+public class Tile {
+	
+	private boolean colorValue;
+	
+	public Tile(){
+		
+	
+	}
+
+}

@@ -1,0 +1,10 @@
+
+public abstract class Player {
+	
+	String colorValue;
+	public Player(String colorValue){
+		this.colorValue = colorValue;
+	}
+	public abstract String getColorValue();
+	public abstract void setColorValue(String colorValue)
+}

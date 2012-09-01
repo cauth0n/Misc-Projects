@@ -1,0 +1,35 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+
+public class Main {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		int boardSize = 0;
+		boolean validInput = false;
+		try{
+			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			
+			while (!validInput){
+				System.out.println("Enter board size (square size)");
+				String text = in.readLine();
+				boardSize = Integer.parseInt(text);
+				if (boardSize == 4 || boardSize == 6 || boardSize == 8)
+				{
+					valid = true;
+				}
+			}
+			
+		}catch(Exception e){
+			
+			System.out.println("Wrong Input");
+			System.exit(0);
+		}
+		Game driver = new Game(boardSize);
+
+	}
+
+}

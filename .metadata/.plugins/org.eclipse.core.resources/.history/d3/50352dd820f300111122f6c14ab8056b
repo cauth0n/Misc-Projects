@@ -1,0 +1,16 @@
+
+public class Human extends Player {
+
+	public Human() {
+		super(colorValue);
+	}
+	
+	
+	
+	public String getColorValue() {
+		return colorValue;
+	}
+	public void setColorValue(String colorValue) {
+		this.colorValue = colorValue;
+	}
+}

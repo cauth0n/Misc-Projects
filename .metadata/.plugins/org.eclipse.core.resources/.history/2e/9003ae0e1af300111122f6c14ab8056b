@@ -1,0 +1,24 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
+
+public class Main {
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		int boardSize;
+		try{
+			BufferedReader in = new BufferedReader(new InputStreamReader(System.in)); 
+			
+		}catch(Exception e){
+			
+			System.out.println("Wrong Input");
+			System.exit(0);
+		}
+		Game driver = new Game(boardSize);
+
+	}
+
+}

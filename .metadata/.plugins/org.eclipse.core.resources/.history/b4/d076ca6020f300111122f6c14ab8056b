@@ -1,0 +1,8 @@
+
+public class Human extends Player {
+	String colorValue;
+	public Human(String ColorValue) {
+		super(colorValue);
+	}
+
+}
