@@ -25,4 +25,10 @@ public class MiniMaxWithoutAB extends Player {
 
 	}
 
+	@Override
+	public Move makeAMove() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

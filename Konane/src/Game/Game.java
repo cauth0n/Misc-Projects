@@ -14,13 +14,17 @@ public class Game {
 	
 	private Player p1;
 	private Player p2;
+	private Player winner;
 	
 	private int boardSize;
 	private Tile[][] gameBoard;
 	
 	
-	/*
+	/**
 	 * Constructor
+	 * 
+	 * 
+	 * @param boardSize		Corresponds to size of the board playing on
 	 */
 	public Game(int boardSize){
 		this.boardSize = boardSize;
@@ -28,7 +32,8 @@ public class Game {
 		init();
 	}
 	
-	/*
+
+	/**
 	 * Initializer, builds all game information needed
 	 */
 	public void init(){
@@ -41,7 +46,8 @@ public class Game {
 		loopManager();
 	}
 	
-	 /* 
+
+	/**
 	 * Main Loop Manager of the Game.
 	 * 
 	 * P1 is offered a turn, and after that turn, the board is checked to see if it is a win.
@@ -49,18 +55,152 @@ public class Game {
 	 */
 	public void loopManager(){
 		boolean isGameFinished = false;
+		Move p1ValueToUpdate;
+		Move p2ValueToUpdate;
 		while (!isGameFinished){
-			//logic.
-			break;
+			printMove("p1");
+			p1ValueToUpdate = p1.makeAMove();
+			while (!isValidMove(p1ValueToUpdate, black)){
+				System.out.println("Wrong input, p1. Try Again.");
+				printMove("p1");
+				p1ValueToUpdate = p1.makeAMove();
+			}
+			applyUpdate(p1ValueToUpdate, black);
+			if (!checkIfMovesLeft()){
+				//p1 wins
+				winner = p1;
+				isGameFinished = true;
+			}
+			
+			//p2 now
+			printMove("p2");
+			p2ValueToUpdate = p2.makeAMove();
+			while (!isValidMove(p2ValueToUpdate, white)){
+				System.out.println("Wrong input, p2. Try Again.");
+				printMove("p2");
+				p1ValueToUpdate = p2.makeAMove();
+			}
+			applyUpdate(p2ValueToUpdate, white);
+			if (!checkIfMovesLeft()){
+				//p2 wins
+				winner = p2;
+				isGameFinished = true;
+			}
 		}
 	}
 	
-	/*
+	/**
+	 * Checks if any moves are left.
+	 * 
+	 * DO NOT localize it. Make sure it checks all the possible game board moves.
+	 * 
+	 * 
+	 * @return			true if more moves exist
+	 * 					false if no more moves exist
+	 */
+	public boolean checkIfMovesLeft(){
+		return true;
+	}
+	
+	/**
+	 * Checks if the input parameters constitute a valid move.
+	 * 
+	 * @param move				Last move made
+	 * @param color				Color making the last move
+	 * 
+	 * 
+	 * @return					Boolean, depending on whether that move is allowed.
+	 */
+	public boolean isValidMove(Move move, String color){
+		return true;
+	}
+	
+	/**
+	 * 
+	 * 
+	 * ALERT ALERT ALERT
+	 * ---
+	 * Not sure if a piece is removed or not after it is done jumping. 
+	 * I know the pieces any piece jumps over are removed. But is the piece that does the jumping removed? 
+	 * The only change would be the last variable. [move.getRowTo()][move.getColTo()]
+	 * 
+	 * Assuming here that it is NOT removed. That it stays.
+	 * ---
+	 * 
+	 * Applies update to global gameBoard. Move is already established as legal.
+	 * 
+	 * @param move				Last move made
+	 * @param color				Color making the last move
+	 */
+	public void applyUpdate(Move move, String color){
+		int iterator;
+		gameBoard[move.getRowFrom()][move.getColFrom()].setColorValue(empty);
+		
+		if (isMoveHorizontalOrVertical(move).equals("horizontal")){		//move made across rows
+			iterator = move.getColFrom();
+			if (iterator > move.getColTo()){
+				while (iterator > move.getColTo()){
+					gameBoard[move.getRowFrom()][iterator].setColorValue(empty);
+					iterator--;
+				}
+			}else{
+				while (iterator < move.getColTo()){
+					gameBoard[move.getRowFrom()][iterator].setColorValue(empty);
+					iterator++;
+				}
+			}
+		}else{
+			iterator = move.getRowFrom();
+			if (iterator > move.getRowTo()){
+				while (iterator > move.getRowTo()){
+					gameBoard[iterator][move.getColFrom()].setColorValue(empty);
+					iterator--;
+				}
+			}else{
+				while (iterator < move.getRowTo()){
+					gameBoard[iterator][move.getColFrom()].setColorValue(empty);
+					iterator++;
+				}
+			}
+		}
+		gameBoard[move.getRowTo()][move.getRowTo()].setColorValue(color);
+	}
+	
+	/**
+	 * Checks to see if move made was horizontal or vertical (Can only be one).
+	 * 
+	 * 
+	 * @param move				move we are checking for.
+	 * 
+	 * 
+	 * @return					horizontal if rows match
+	 * 							vertical if columns match
+	 */
+	public String isMoveHorizontalOrVertical(Move move){
+		if (move.getRowFrom() == move.getRowTo()){
+			return "horizontal";
+		}else if (move.getColFrom() == move.getColTo()){
+			return "vertical";
+		}else{
+			System.out.println("Error in isMoveHorizontalOrVertical method. Should be vert or horiz, nothing else.");
+			return null;
+		}
+	}
+
+	/**
 	 * Checks if second move is valid -- that is, it is adjacent to the first move.
 	 * 
 	 * Assuming board is even and square.\
 	 * 
 	 * initialMove has format: [0] = row,  [1] = column
+	 * 
+	 * 
+	 * @param rowChoice			choice of row for second move
+	 * @param colChoice			choice of column for second move
+	 * @param initialMove		first move made by other player
+	 * 
+	 * @return					true if valid move
+	 * 							false if invalid move
 	 */
 	public boolean checkIfValidSecondMove(int rowChoice, int colChoice, int[] initialMove){
 		if (initialMove[0] == 0){	//upper left
@@ -101,9 +241,14 @@ public class Game {
 			}
 		}
 	}
+
 	
-	/*
+	
+	/**
 	 * Second move of game. Must be white, and adjacent to the first move.
+	 * 
+	 * 
+	 * @param initialMove		First move made by other player
 	 */
 	public void secondMove(int[] initialMove){
 		BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -140,16 +285,23 @@ public class Game {
 		}
 	}
 	
-	/*
+
+	/**
 	 * Simply show player the board.
+	 * 
+	 * 
+	 * @param player		Player that sees the board next
 	 */
 	public void printMove(String player){
 		System.out.format("Your move, %s./n The board looks like this:/n/n", player);
 		printBoard();
 	}
 	
-	/*
+	/**
 	 * First Move. This has a unique moveset.
+	 * 
+	 * 
+	 * @return			first move choice. Needed for validity of second move.
 	 */
 	public int[] firstMove(){
 		boolean validChoice = false;
@@ -191,10 +343,20 @@ public class Game {
 		return (firstMove);
 	}
 	
-	/*
+	
+	
+	/**
 	 * Checks if a starting move is in the 4 corners of the board, or the 4 middle corners.
 	 * 
 	 * The assignment asks for only even squares.. If time persists, will put in logic to deal with odd squares.
+	 * 
+	 * 	
+	 * @param rowChoice		choice of first row
+	 * @param colChoice		choice of first column
+	 * 
+	 * 
+	 * @return				true if valid starting move
+	 * 						false if invalid starting move
 	 */
 	public boolean checkIfValidStartingMove(int rowChoice, int colChoice){
 		int middleOfPuzzle = boardSize / 2;
@@ -210,9 +372,19 @@ public class Game {
 			return false;
 		}
 	}
+
 	
-	/*
+	/**
 	 * Checks if the color specified is present at that location on the gameboard.
+	 * 
+	 * 
+	 * @param rowChoice		row of piece to check the color of
+	 * @param colChoice		column of piece to check the color of
+	 * @param color			color of piece
+	 * 
+	 * 
+	 * @return				true if piece exists there
+	 * 						false if piece is not there
 	 */
 	public boolean checkIfColorOfPieceIsPresent(int rowChoice, int colChoice, String color){
 		if (gameBoard[rowChoice][colChoice].getColorValue().equals(color)){
@@ -221,8 +393,9 @@ public class Game {
 			return false;
 		}
 	}
+
 	
-	/*
+	/**
 	 * Prints menu for new players to choose from.
 	 */
 	public void printPlayerMenu(){
@@ -231,13 +404,23 @@ public class Game {
 		System.out.println("3: MiniMax without alpah/beta pruning");
 	}
 	
-	/*
+	
+	/**
 	 * Builds a player at runtime, based on user choice.
 	 * Returns a boolean representing the validity of the choices.
 	 * 
 	 * Bad choices mean go back to chooser again.
 	 * 
 	 * color means black or white -- first player is black. second player is white.
+	 * 
+	 * 
+	 * @param player		Player object (p1 or p2) to chose from
+	 * @param playerChoice	Human, minimax w/o ab pruning, or minimax with ab pruning.
+	 * @param color			which color player will be
+	 * 
+	 * 
+	 * @return				true if valid choice is made
+	 * 						flase if invalid choice is made
 	 */
 	public boolean playerBuilder(Player player, int playerChoice, String color){
 		switch(playerChoice){
@@ -248,7 +431,8 @@ public class Game {
 		}
 	}
 	
-	/*
+	
+	/**
 	 * Sets up 2 players, querying them for info until 2 players of the 3 player choices are met
 	 */
 	public void setUpPlayers(){
@@ -274,7 +458,7 @@ public class Game {
 				printPlayerMenu();
 				input = in.readLine();
 				choice = Integer.parseInt(input);
-				if (playerBuilder(p1, choice, white)){
+				if (playerBuilder(p2, choice, white)){
 					player2SetUp = true;
 				}else{
 					System.out.println("Invalid selection. Please try again.");
@@ -286,7 +470,8 @@ public class Game {
 		}
 	}
 
-	/*
+	
+	/**
 	 * Initialize Game -- Black has a piece in the Upper left hand corner, and every other spot thereafter.
 	 * 
 	 * Logic below based on the fact that in a square array, every other spot is either an even number, or odd.
@@ -303,10 +488,14 @@ public class Game {
 		}
 	}
 
-	/*
+
+	/**
 	 * Returns a dashed line the same size as the game board.
 	 * 
 	 * Used for printing lines after every row.
+	 * 
+	 * 
+	 * @return				formatted line representing length of board as dashes "--"
 	 */
 	public String printBoardLine(){
 		String line = "";
@@ -316,7 +505,8 @@ public class Game {
 		return line;
 	}
 	
-	/*
+
+	/**
 	 * Print the game board. Prints by iterating through entire array, checking if black or white, and printing
 	 */
 	public void printBoard(){

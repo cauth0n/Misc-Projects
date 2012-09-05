@@ -1,0 +1,31 @@
+package Game;
+
+public class Human extends Player {
+
+	public Human(String colorValue) {
+		super(colorValue);
+		playerType = "Human";
+	}
+
+
+
+	@Override
+	public String getPlayerType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public String getColorValue() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public void setColorValue(String colorValue) {
+		// TODO Auto-generated method stub
+		
+	}
+}
