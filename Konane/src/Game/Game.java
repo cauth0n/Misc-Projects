@@ -41,6 +41,20 @@ public class Game {
 		loopManager();
 	}
 	
+	 /* 
+	 * Main Loop Manager of the Game.
+	 * 
+	 * P1 is offered a turn, and after that turn, the board is checked to see if it is a win.
+	 * Then, if no win happened, P2 is offered a turn. Then, the board is checked again.
+	 */
+	public void loopManager(){
+		boolean isGameFinished = false;
+		while (!isGameFinished){
+			//logic.
+			break;
+		}
+	}
+	
 	/*
 	 * Checks if second move is valid -- that is, it is adjacent to the first move.
 	 * 
@@ -205,20 +219,6 @@ public class Game {
 			return true;
 		}else{
 			return false;
-		}
-	}
-	
-	 /* 
-	 * Main Loop Manager of the Game.
-	 * 
-	 * P1 is offered a turn, and after that turn, the board is checked to see if it is a win.
-	 * Then, if no win happened, P2 is offered a turn. Then, the board is checked again.
-	 */
-	public void loopManager(){
-		boolean isGameFinished = false;
-		while (!isGameFinished){
-			//logic.
-			break;
 		}
 	}
 	
