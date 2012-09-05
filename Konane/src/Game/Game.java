@@ -55,9 +55,9 @@ public class Game {
 	 */
 	public void loopManager(){
 		boolean isGameFinished = false;
-		Move p1ValueToUpdate;
-		Move p2ValueToUpdate;
 		while (!isGameFinished){
+			Move p1ValueToUpdate = new Move(null, null);
+			Move p2ValueToUpdate = new Move(null, null);
 			printMove("p1");
 			p1ValueToUpdate = p1.makeAMove();
 			while (!isValidMove(p1ValueToUpdate, black)){
@@ -293,7 +293,7 @@ public class Game {
 	 * @param player		Player that sees the board next
 	 */
 	public void printMove(String player){
-		System.out.format("Your move, %s./n The board looks like this:/n/n", player);
+		System.out.format("Your move, %s.\nThe board looks like this:\n\n", player);
 		printBoard();
 	}
 	
@@ -420,7 +420,7 @@ public class Game {
 	 * 
 	 * 
 	 * @return				true if valid choice is made
-	 * 						flase if invalid choice is made
+	 * 						false if invalid choice is made
 	 */
 	public boolean playerBuilder(Player player, int playerChoice, String color){
 		switch(playerChoice){
@@ -499,7 +499,7 @@ public class Game {
 	 */
 	public String printBoardLine(){
 		String line = "";
-		for (int i = 0; i < ((boardSize * 2) + 1); i++){
+		for (int i = 0; i < ((boardSize * 4) + 1); i++){
 			line += "-";
 		}
 		return line;
@@ -515,11 +515,11 @@ public class Game {
 			for (int j = 0; j < boardSize; j++){
 				System.out.print("|");
 				if (gameBoard[i][j].getColorValue().equals(black)){
-					System.out.print("b");
+					System.out.print(" b ");
 				}else if (gameBoard[i][j].getColorValue().equals(white)){
-					System.out.print("w");
+					System.out.print(" w ");
 				}else{
-					System.out.print(" ");
+					System.out.print("   ");
 				}
 			}
 			System.out.println("|");
