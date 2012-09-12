@@ -4,7 +4,7 @@ public class MiniMaxWithAB extends Player {
 
 	public MiniMaxWithAB(String colorValue) {
 		super(colorValue);
-		// TODO Auto-generated constructor stub
+		playerType = "MiniWith";
 	}
 	
 	@Override
@@ -29,6 +29,24 @@ public class MiniMaxWithAB extends Player {
 	public Move makeAMove() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public Move firstMove() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Move secondMove() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void updateStoredGameBoard(Tile[][] gameBoardCopy) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

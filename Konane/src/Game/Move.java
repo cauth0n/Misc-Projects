@@ -5,13 +5,31 @@ public class Move {
 	
 	private int[] moveFrom;
 	private int[] moveTo;
+	private int[] selectionMove;
 	
 	public Move(int[] moveFrom, int[] moveTo)
 	{
 		this.moveFrom = moveFrom;
 		this.moveTo = moveTo;
 	}
+	public Move(int[] select)
+	{
+		this.selectionMove = select;
+	}
+	
 
+	public int getSelectionMoveRow() {
+		return selectionMove[0];
+	}
+	public int getSelectionMoveCol(){
+		return selectionMove[1];
+	}
+	
+	public void setSelectionMove(int[] selectionMove) {
+		this.selectionMove = selectionMove;
+	}
+	
+	
 	public int getRowFrom() {
 		return moveFrom[0];
 	}
