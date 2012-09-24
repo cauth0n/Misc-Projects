@@ -9,19 +9,17 @@ public class MiniMaxWithAB extends Player {
 	
 	@Override
 	public String getPlayerType() {
-		// TODO Auto-generated method stub
-		return null;
+		return playerType;
 	}
 
 	@Override
 	public String getColorValue() {
-		// TODO Auto-generated method stub
-		return null;
+		return colorValue;
 	}
 
 	@Override
 	public void setColorValue(String colorValue) {
-		// TODO Auto-generated method stub
+		this.colorValue = colorValue;
 
 	}
 
@@ -45,8 +43,7 @@ public class MiniMaxWithAB extends Player {
 
 	@Override
 	public void updateStoredGameBoard(Tile[][] gameBoardCopy) {
-		// TODO Auto-generated method stub
-		
+		copyOfGameBoard = gameBoardCopy;
 	}
 
 }

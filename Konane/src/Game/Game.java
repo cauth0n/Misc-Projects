@@ -87,10 +87,11 @@ public class Game {
 	}
 
 	/**
-	 * Checks if there are any moves left. Uses checks on above, below, right, or left of a piece
-	 * to see if any more moves exist.
+	 * Checks if there are any moves left. Uses checks on above, below, right, or left of a piece to
+	 * see if any more moves exist.
 	 * 
-	 * @param color		color of piece in danger of losing.
+	 * @param color
+	 *            color of piece in danger of losing.
 	 * 
 	 * @return true if moves exist, false if none exist.
 	 */
@@ -132,11 +133,14 @@ public class Game {
 			return false;
 		}
 	}
+
 	/**
 	 * Checks if a move exists left of the input row/col pair
 	 * 
-	 * @param row 	Row to check if moves exist
-	 * @param column	Column to check if moves exist
+	 * @param row
+	 *            Row to check if moves exist
+	 * @param column
+	 *            Column to check if moves exist
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
@@ -155,11 +159,14 @@ public class Game {
 			}
 		}
 	}
+
 	/**
 	 * Checks if a move exists right of the input row/col pair
 	 * 
-	 * @param row 	Row to check if moves exist
-	 * @param column	Column to check if moves exist
+	 * @param row
+	 *            Row to check if moves exist
+	 * @param column
+	 *            Column to check if moves exist
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
@@ -179,11 +186,14 @@ public class Game {
 			}
 		}
 	}
+
 	/**
 	 * Checks if a move exists above the input row/col pair
 	 * 
-	 * @param row 	Row to check if moves exist
-	 * @param column	Column to check if moves exist
+	 * @param row
+	 *            Row to check if moves exist
+	 * @param column
+	 *            Column to check if moves exist
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
@@ -202,11 +212,14 @@ public class Game {
 			}
 		}
 	}
+
 	/**
 	 * Checks if a move exists below the input row/col pair
 	 * 
-	 * @param row 	Row to check if moves exist
-	 * @param column	Column to check if moves exist
+	 * @param row
+	 *            Row to check if moves exist
+	 * @param column
+	 *            Column to check if moves exist
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
@@ -227,6 +240,70 @@ public class Game {
 		}
 	}
 
+
+	/**
+	 * Recursive method for checking moves until legal. If illegal, will immediately break
+	 * 
+	 * 
+	 * @param move
+	 *            a copy of the last move, used for grabbing unassociated values
+	 * @param direction
+	 *            direction of moves to check in (horizontal or vertical)
+	 * @param movement
+	 *            movement of last move (left, right, up, down)
+	 * @param currentPlacement
+	 *            current spot of piece as it jumps
+	 * @param finalSpot
+	 *            ending spot. Needed for generalized base case (it covers rows and columns)
+	 * @return //recursive, but true if all jumps were legal
+	 */
+	public boolean isJumpingLegal(Move move, String direction, String movement,
+			int currentPlacement, int finalSpot) {
+
+		if (currentPlacement == finalSpot) {
+			return true;
+		} else {
+			if (direction.equals("horizontal")) {
+				if (movement.equals("left")) {
+					if (gameBoard[move.getRowFrom()][currentPlacement - 1]
+							.getColorValue().equals(empty)) {
+						return false;
+					} else {
+						return isJumpingLegal(move, direction, movement,
+								currentPlacement - 2, finalSpot);
+					}
+				} else {
+					if (gameBoard[move.getRowFrom()][currentPlacement + 1]
+							.getColorValue().equals(empty)) {
+						return false;
+					} else {
+						return isJumpingLegal(move, direction, movement,
+								currentPlacement + 2, finalSpot);
+					}
+				}
+			} else {
+				if (movement.equals("up")) {
+					if (gameBoard[currentPlacement - 1][move.getColFrom()]
+							.getColorValue().equals(empty)) {
+						return false;
+					} else {
+						return isJumpingLegal(move, direction, movement,
+								currentPlacement - 2, finalSpot);
+					}
+				} else {
+					if (gameBoard[currentPlacement + 1][move.getColFrom()]
+							.getColorValue().equals(empty)) {
+						return false;
+					} else {
+						return isJumpingLegal(move, direction, movement,
+								currentPlacement + 2, finalSpot);
+					}
+				}
+			}
+
+		}
+	}
+
 	/**
 	 * Checks if the input parameters constitute a valid move.
 	 * 
@@ -239,7 +316,69 @@ public class Game {
 	 * @return Boolean, depending on whether that move is allowed.
 	 */
 	public boolean isValidMove(Move move, String color) {
-		return true;
+		// I need to check multiple jumps,
+		try {
+			if (!gameBoard[move.getRowFrom()][move.getColFrom()].getColorValue().equals(color)){
+				return false;
+			}
+			if (!gameBoard[move.getRowTo()][move.getColTo()].getColorValue()
+					.equals(empty)) {	// a non-empty space we are jumping to
+				return false;
+			}
+			if ((((int) Math.abs(move.getColFrom() - move.getColTo())) % 2 != 0)
+					|| ((int) Math.abs(move.getRowFrom() - move.getRowTo())) % 2 != 0) {
+				// check if is an illegal square we land on
+				return false;
+			}
+
+			if (isMoveHorizontalOrVertical(move).equals("horizontal")) {
+
+				if (move.getColFrom() > move.getColTo()) {	// move is left
+					if (move.getColFrom() < 2 || move.getColTo() < 0) {	// boundary check
+						return false;
+					}
+					return isJumpingLegal(move, "horizontal", "left",
+							move.getColFrom(), move.getColTo());
+
+				} else if (move.getColFrom() < move.getColTo()) {					// move is right
+					if (move.getColFrom() > (boardSize - 2)
+							|| move.getColTo() > boardSize) {	// boundary check
+						return false;
+					}
+					return isJumpingLegal(move, "horizontal", "right",
+							move.getColFrom(), move.getColTo());
+
+				} else {	// same move spot
+					return false;
+				}
+
+			} else if (isMoveHorizontalOrVertical(move).equals("vertical")) {// vertical
+
+				if (move.getRowFrom() > move.getRowTo()) {	// move is up
+					if (move.getRowFrom() < 2 || move.getRowTo() < 0) {	// boundary check
+						return false;
+					}
+					return isJumpingLegal(move, "vertical", "up",
+							move.getRowFrom(), move.getRowTo());
+
+				} else if (move.getRowFrom() < move.getRowTo()) {					// move is right
+					if (move.getRowFrom() > (boardSize - 2)
+							|| move.getRowTo() > boardSize) {	// boundary check
+						return false;
+					}
+					return isJumpingLegal(move, "vertical", "down",
+							move.getRowFrom(), move.getRowTo());
+
+				} else {	// same move spot
+					return false;
+				}
+
+			} else {// error
+				return false;
+			}
+		} catch (NullPointerException e) {
+			return false;
+		}
 	}
 
 	/**
@@ -571,7 +710,7 @@ public class Game {
 	 * @return formatted line representing length of board as dashes "--"
 	 */
 	public String printBoardLine() {
-		String line = "";
+		String line = " ";
 		for (int i = 0; i < ((boardSize * 4) + 1); i++) {
 			line += "-";
 		}
@@ -583,6 +722,7 @@ public class Game {
 	 * and printing
 	 */
 	public void printBoard() {
+
 		System.out.println(printBoardLine());
 		for (int i = 0; i < boardSize; i++) {
 			for (int j = 0; j < boardSize; j++) {
@@ -600,6 +740,11 @@ public class Game {
 		}
 	}
 
+	/**
+	 * gets a copy of the current gameboard. Players use this as a copy for them to work on.
+	 * 
+	 * @return current gameboard.
+	 */
 	public Tile[][] getGameBoard() {
 		return gameBoard;
 	}
