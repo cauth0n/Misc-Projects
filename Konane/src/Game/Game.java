@@ -1,31 +1,42 @@
 package Game;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Game {
 
-	/**
-	 * Strings declared as final because they will be assigned to Tile spots.
+	/*
+	 * String colors declared as final because they will be assigned to Tile spots.
 	 */
 	protected final String black = "Black";
 	protected final String white = "White";
 	protected final String empty = "Empty";
 
+	/*
+	 * Players in our game. 
+	 */
 	private Player p1;
 	private Player p2;
 	private Player winner;
 
+	/*
+	 * Game information. gameBoard is the copy of our current game, from server-side. Note that it can only be editted from this side,
+	 * but copies can be made of it and manipulated.
+	 */
 	private int boardSize;
 	private Tile[][] gameBoard;
+	
+	/*
+	 * ArrayList of moves at any state
+	 */
+	private ArrayList<Move> setOfAllPossibleStartingMoves = new ArrayList<Move>();
+	private ArrayList<Move> setOfAllPossibleBlackMoves = new ArrayList<Move>();
+	private ArrayList<Move> setOfAllPossibleWhiteMoves = new ArrayList<Move>();
 
 	/**
-	 * Constructor
+	 * Constructor -- calls init() which handles game sequencing.
 	 * 
-	 * 
-	 * @param boardSize
-	 *            Corresponds to size of the board playing on
+	 * @param boardSize defines the size of the gameBoard that will be played on.
 	 */
 	public Game(int boardSize) {
 		this.boardSize = boardSize;
@@ -39,9 +50,197 @@ public class Game {
 	public void init() {
 		setUpPlayers();
 		initializeGame();
+		buildFirstMoveSet();
 		secondMove(firstMove());
 		printBoard();
 		loopManager();
+	}
+
+	/**
+	 * Recursive method that continues adding moves to an arrayList passed by reference until the boardLimits are reached.
+	 * 
+	 * @param row
+	 * @param col
+	 * @param initialMove
+	 * @param movesToReturn
+	 * @return
+	 */
+	public boolean isJumpingLeftLegal(int row, int col, Move initialMove, ArrayList<Move> movesToReturn) {
+
+		if (((col - 2) < 0) || (gameBoard[row][col - 1].getColorValue().equals(empty)) || (!gameBoard[row][col - 2].getColorValue().equals(empty))) {
+			return true;
+		} else {
+			Move nextJump = new Move(initialMove.getTileFrom(), gameBoard[row][col - 2]);
+			movesToReturn.add(nextJump);
+			return isJumpingLeftLegal(row, col - 2, initialMove, movesToReturn);
+		}
+	}
+
+	public boolean isJumpingRightLegal(int row, int col, Move initialMove, ArrayList<Move> movesToReturn) {
+
+		if (((col + 2) > (boardSize - 1)) || (gameBoard[row][col + 1].getColorValue().equals(empty))
+				|| (!gameBoard[row][col + 2].getColorValue().equals(empty))) {
+			return true;
+		} else {
+			Move nextJump = new Move(initialMove.getTileFrom(), gameBoard[row][col + 2]);
+			movesToReturn.add(nextJump);
+			return isJumpingRightLegal(row, col + 2, initialMove, movesToReturn);
+		}
+	}
+
+	public boolean isJumpingUpLegal(int row, int col, Move initialMove, ArrayList<Move> movesToReturn) {
+
+		if (((row - 2) < 0) || (gameBoard[row - 1][col].getColorValue().equals(empty)) || (!gameBoard[row - 2][col].getColorValue().equals(empty))) {
+			return true;
+		} else {
+			Move nextJump = new Move(initialMove.getTileFrom(), gameBoard[row - 2][col]);
+			movesToReturn.add(nextJump);
+			return isJumpingUpLegal(row - 2, col, initialMove, movesToReturn);
+		}
+	}
+
+	public boolean isJumpingDownLegal(int row, int col, Move initialMove, ArrayList<Move> movesToReturn) {
+
+		if (((row + 2) > (boardSize - 1)) || (gameBoard[row + 1][col].getColorValue().equals(empty))
+				|| (!gameBoard[row + 2][col].getColorValue().equals(empty))) {
+			return true;
+		} else {
+			Move nextJump = new Move(initialMove.getTileFrom(), gameBoard[row + 2][col]);
+			movesToReturn.add(nextJump);
+			return isJumpingDownLegal(row + 2, col, initialMove, movesToReturn);
+		}
+	}
+
+	public void constructWhiteMoveSet() {
+		for (Tile[] arr : gameBoard) {
+			for (Tile tile : arr) {
+				if (tile.getColorValue().equals(white)) {
+					Move immediateLeft = new Move(tile, null);
+					if (isLeftMove(tile.getRowPlacement(), tile.getColPlacement(), immediateLeft)) {
+						ArrayList<Move> allLeftMoves = new ArrayList<Move>();
+						setOfAllPossibleWhiteMoves.add(immediateLeft);
+						if (isJumpingLeftLegal(immediateLeft.getTileTo().getRowPlacement(), immediateLeft.getTileTo().getColPlacement(),
+								immediateLeft, allLeftMoves)) {
+							for (Move move : allLeftMoves) {
+								setOfAllPossibleWhiteMoves.add(move);
+							}
+						}
+					}
+					Move immediateRight = new Move(tile, null);
+					if (isRightMove(tile.getRowPlacement(), tile.getColPlacement(), immediateRight)) {
+						ArrayList<Move> allRightMoves = new ArrayList<Move>();
+						setOfAllPossibleWhiteMoves.add(immediateRight);
+						if (isJumpingLeftLegal(immediateRight.getTileTo().getRowPlacement(), immediateRight.getTileTo().getColPlacement(),
+								immediateLeft, allRightMoves)) {
+							for (Move move : allRightMoves) {
+								setOfAllPossibleWhiteMoves.add(move);
+							}
+						}
+					}
+					Move immediateUp = new Move(tile, null);
+					if (isUpMove(tile.getRowPlacement(), tile.getColPlacement(), immediateUp)) {
+						ArrayList<Move> allUpMoves = new ArrayList<Move>();
+						setOfAllPossibleWhiteMoves.add(immediateUp);
+						if (isJumpingUpLegal(immediateUp.getTileTo().getRowPlacement(), immediateUp.getTileTo().getColPlacement(), immediateUp,
+								allUpMoves)) {
+							for (Move move : allUpMoves) {
+								setOfAllPossibleWhiteMoves.add(move);
+							}
+						}
+					}
+					Move immediateDown = new Move(tile, null);
+					if (isDownMove(tile.getRowPlacement(), tile.getColPlacement(), immediateDown)) {
+						ArrayList<Move> allDownMoves = new ArrayList<Move>();
+						setOfAllPossibleWhiteMoves.add(immediateDown);
+						if (isJumpingDownLegal(immediateDown.getTileTo().getRowPlacement(), immediateDown.getTileTo().getColPlacement(),
+								immediateDown, allDownMoves)) {
+							for (Move move : allDownMoves) {
+								setOfAllPossibleWhiteMoves.add(move);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public void constructBlackMoveSet() {
+		for (Tile[] arr : gameBoard) {
+			for (Tile tile : arr) {
+				if (tile.getColorValue().equals(black)) {
+					Move immediateLeft = new Move(tile, null);
+					if (isLeftMove(tile.getRowPlacement(), tile.getColPlacement(), immediateLeft)) {
+						ArrayList<Move> allLeftMoves = new ArrayList<Move>();
+						setOfAllPossibleBlackMoves.add(immediateLeft);
+						if (isJumpingLeftLegal(immediateLeft.getTileTo().getRowPlacement(), immediateLeft.getTileTo().getColPlacement(),
+								immediateLeft, allLeftMoves)) {
+							for (Move move : allLeftMoves) {
+								setOfAllPossibleBlackMoves.add(move);
+							}
+						}
+					}
+					Move immediateRight = new Move(tile, null);
+					if (isRightMove(tile.getRowPlacement(), tile.getColPlacement(), immediateRight)) {
+						ArrayList<Move> allRightMoves = new ArrayList<Move>();
+						setOfAllPossibleBlackMoves.add(immediateRight);
+						if (isJumpingLeftLegal(immediateRight.getTileTo().getRowPlacement(), immediateRight.getTileTo().getColPlacement(),
+								immediateLeft, allRightMoves)) {
+							for (Move move : allRightMoves) {
+								setOfAllPossibleBlackMoves.add(move);
+							}
+						}
+					}
+					Move immediateUp = new Move(tile, null);
+					if (isUpMove(tile.getRowPlacement(), tile.getColPlacement(), immediateUp)) {
+						ArrayList<Move> allUpMoves = new ArrayList<Move>();
+						setOfAllPossibleBlackMoves.add(immediateUp);
+						if (isJumpingUpLegal(immediateUp.getTileTo().getRowPlacement(), immediateUp.getTileTo().getColPlacement(), immediateUp,
+								allUpMoves)) {
+							for (Move move : allUpMoves) {
+								setOfAllPossibleBlackMoves.add(move);
+							}
+						}
+					}
+					Move immediateDown = new Move(tile, null);
+					if (isDownMove(tile.getRowPlacement(), tile.getColPlacement(), immediateDown)) {
+						ArrayList<Move> allDownMoves = new ArrayList<Move>();
+						setOfAllPossibleBlackMoves.add(immediateDown);
+						if (isJumpingDownLegal(immediateDown.getTileTo().getRowPlacement(), immediateDown.getTileTo().getColPlacement(),
+								immediateDown, allDownMoves)) {
+							for (Move move : allDownMoves) {
+								setOfAllPossibleBlackMoves.add(move);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	public void buildFirstMoveSet() {
+		Move UL = new Move(gameBoard[0][0]);
+		Move LL = new Move(gameBoard[boardSize - 1][0]);
+		Move UR = new Move(gameBoard[0][boardSize - 1]);
+		Move LR = new Move(gameBoard[boardSize - 1][boardSize - 1]);
+		Move MUL = new Move(gameBoard[(boardSize / 2) - 1][(boardSize / 2) - 1]);
+		Move MUR = new Move(gameBoard[(boardSize / 2) - 1][(boardSize / 2)]);
+		Move MLL = new Move(gameBoard[(boardSize / 2)][(boardSize / 2) - 1]);
+		Move MLR = new Move(gameBoard[(boardSize / 2)][(boardSize / 2)]);
+		setOfAllPossibleStartingMoves.add(UL);
+		setOfAllPossibleStartingMoves.add(LL);
+		setOfAllPossibleStartingMoves.add(UR);
+		setOfAllPossibleStartingMoves.add(LR);
+		setOfAllPossibleStartingMoves.add(MUL);
+		setOfAllPossibleStartingMoves.add(MLL);
+		setOfAllPossibleStartingMoves.add(MUR);
+		setOfAllPossibleStartingMoves.add(MLR);
+	}
+
+	public void printMoves(ArrayList<Move> moves) {
+		for (Move move : moves) {
+			System.out.println("From [" + move.getTileFrom().getRowPlacement() + ", " + move.getTileFrom().getColPlacement() + "]");
+			System.out.println("To [" + move.getTileTo().getRowPlacement() + ", " + move.getTileTo().getColPlacement() + "]");
+		}
 	}
 
 	/**
@@ -51,87 +250,98 @@ public class Game {
 	 * if no win happened, P2 is offered a turn. Then, the board is checked again.
 	 */
 	public void loopManager() {
+
 		boolean isGameFinished = false;
+
 		while (!isGameFinished) {
 			Move p1ValueToUpdate = new Move(null, null);
 			Move p2ValueToUpdate = new Move(null, null);
+			boolean p1Move = false;
 			printMove("p1");
-			p1ValueToUpdate = p1.makeAMove();
-			while (!isValidMove(p1ValueToUpdate, black)) {
-				System.out.println("Wrong input, p1. Try Again.");
-				printMove("p1");
-				p1ValueToUpdate = p1.makeAMove();
-			}
-			applyUpdate(p1ValueToUpdate, black);
-			if (!checkIfMovesLeft(white)) {
-				// p1 wins
-				winner = p1;
-				isGameFinished = true;
-			}
 
-			// p2 now
+			while (!p1Move) {
+				constructBlackMoveSet();
+				System.out.println("Player 1 has " + setOfAllPossibleBlackMoves.size() + " moves left.");
+				printMoves(setOfAllPossibleBlackMoves);
+				if (setOfAllPossibleBlackMoves.isEmpty()) {
+					winner = p2;
+					isGameFinished = true;
+					break;
+				}
+
+				p1ValueToUpdate = p1.makeAMove();
+				if (p1.getPlayerType().equals("Human")) {
+					for (Move move : setOfAllPossibleBlackMoves) {
+						if (isSameMove(p1ValueToUpdate, move)) {
+							p1Move = true;
+							setOfAllPossibleBlackMoves.clear();
+							break;
+						}
+					}
+					System.out.println("Bad move, p1");
+				} else {
+					p1Move = true;
+					setOfAllPossibleBlackMoves.clear();
+				}
+			}
+			if (isGameFinished) {
+				break;
+			}
+			applyUpdate(p1ValueToUpdate);
+
+			boolean p2Move = false;
 			printMove("p2");
-			p2ValueToUpdate = p2.makeAMove();
-			while (!isValidMove(p2ValueToUpdate, white)) {
-				System.out.println("Wrong input, p2. Try Again.");
-				printMove("p2");
-				p1ValueToUpdate = p2.makeAMove();
+			while (!p2Move) {
+				constructWhiteMoveSet();
+				System.out.println("Player 2 has " + setOfAllPossibleWhiteMoves.size() + " moves left.");
+				printMoves(setOfAllPossibleWhiteMoves);
+
+				if (setOfAllPossibleWhiteMoves.isEmpty()) {
+					winner = p1;
+					isGameFinished = true;
+					break;
+				}
+
+				p2ValueToUpdate = p2.makeAMove();
+				if (p1.getPlayerType().equals("Human")) {
+					for (Move move : setOfAllPossibleWhiteMoves) {
+						if (isSameMove(p2ValueToUpdate, move)) {
+							p2Move = true;
+							setOfAllPossibleWhiteMoves.clear();
+							break;
+						}
+					}
+					System.out.println("Bad move, p2");
+				} else {
+					p2Move = true;
+					setOfAllPossibleWhiteMoves.clear();
+				}
 			}
-			applyUpdate(p2ValueToUpdate, white);
-			if (!checkIfMovesLeft(black)) {
-				// p2 wins
-				winner = p2;
-				isGameFinished = true;
+			if (isGameFinished) {
+				break;
 			}
+			applyUpdate(p2ValueToUpdate);
+		}
+		printWinner();
+	}
+
+	public void printWinner() {
+		if (winner.getColorValue().equals(black)) {
+			System.out.println("Player 1 wins!!!!");
+		} else {
+			System.out.println("Player 2 wins!!!!");
 		}
 	}
 
-	/**
-	 * Checks if there are any moves left. Uses checks on above, below, right, or left of a piece to
-	 * see if any more moves exist.
-	 * 
-	 * @param color
-	 *            color of piece in danger of losing.
-	 * 
-	 * @return true if moves exist, false if none exist.
-	 */
-	public boolean checkIfMovesLeft(String color) {
-		boolean moveRight = false, moveLeft = false, moveUp = false, moveDown = false;
-		// check if any black moves left
-		if (color.equals(black)) { // p2 made a move, now p1 is at risk of losing
-
-			for (int i = 0; i < boardSize; i++) {
-				for (int j = 0; j < boardSize; j++) {
-					if (gameBoard[i][j].getColorValue().equals(black)) {
-						moveLeft = isLeftMove(i, j);
-						moveRight = isRightMove(i, j);
-						moveUp = isUpMove(i, j);
-						moveDown = isDownMove(i, j);
-						if (moveLeft || moveRight || moveUp || moveDown) {
-							return true;
-						}
-					}
-				}
-			}
-			return false;
-
-			// check if any white moves left
-		} else { // p1 made a move, now p2 is at risk of losing
-			for (int i = 0; i < boardSize; i++) {
-				for (int j = 0; j < boardSize; j++) {
-					if (gameBoard[i][j].getColorValue().equals(white)) {
-						moveLeft = isLeftMove(i, j);
-						moveRight = isRightMove(i, j);
-						moveUp = isUpMove(i, j);
-						moveDown = isDownMove(i, j);
-						if (moveLeft || moveRight || moveUp || moveDown) {
-							return true;
-						}
-					}
-				}
-			}
-			return false;
+	public boolean isSameMove(Move one, Move two) {
+		if (one.getTileFrom().getRowPlacement() == two.getTileFrom().getRowPlacement()
+				&& one.getTileFrom().getColPlacement() == two.getTileFrom().getColPlacement()
+				&& one.getTileTo().getRowPlacement() == two.getTileTo().getRowPlacement()
+				&& one.getTileTo().getColPlacement() == two.getTileTo().getColPlacement()) {
+			return true;
 		}
+		return false;
+
 	}
 
 	/**
@@ -144,7 +354,7 @@ public class Game {
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
-	public boolean isLeftMove(int row, int column) {
+	public boolean isLeftMove(int row, int column, Move moveToReturn) {
 		if (column == 0 || column == 1) {	// can't check left with that few spots
 			return false;
 		} else {
@@ -152,6 +362,7 @@ public class Game {
 				return false;
 			} else {
 				if (gameBoard[row][column - 2].getColorValue().equals(empty)) {
+					moveToReturn.setTileTo(gameBoard[row][column - 2]);
 					return true;
 				} else {
 					return false;
@@ -170,7 +381,7 @@ public class Game {
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
-	public boolean isRightMove(int row, int column) {
+	public boolean isRightMove(int row, int column, Move moveToReturn) {
 		if (column == (boardSize - 1) || column == (boardSize - 2)) {	// can't check right with that
 																		// few spots
 			return false;
@@ -179,6 +390,7 @@ public class Game {
 				return false;
 			} else {
 				if (gameBoard[row][column + 2].getColorValue().equals(empty)) {
+					moveToReturn.setTileTo(gameBoard[row][column + 2]);
 					return true;
 				} else {
 					return false;
@@ -197,7 +409,7 @@ public class Game {
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
-	public boolean isUpMove(int row, int column) {
+	public boolean isUpMove(int row, int column, Move moveToReturn) {
 		if (row == 0 || row == 1) {	// can't check up with that few spots
 			return false;
 		} else {
@@ -205,6 +417,7 @@ public class Game {
 				return false;
 			} else {
 				if (gameBoard[row - 2][column].getColorValue().equals(empty)) {
+					moveToReturn.setTileTo(gameBoard[row - 2][column]);
 					return true;
 				} else {
 					return false;
@@ -223,7 +436,7 @@ public class Game {
 	 * 
 	 * @return false if no moves, true if moves.
 	 */
-	public boolean isDownMove(int row, int column) {
+	public boolean isDownMove(int row, int column, Move moveToReturn) {
 		if (row == (boardSize - 1) || row == (boardSize - 2)) {	// can't check up with that few
 																// spots
 			return false;
@@ -232,152 +445,12 @@ public class Game {
 				return false;
 			} else {
 				if (gameBoard[row + 2][column].getColorValue().equals(empty)) {
+					moveToReturn.setTileTo(gameBoard[row + 2][column]);
 					return true;
 				} else {
 					return false;
 				}
 			}
-		}
-	}
-
-
-	/**
-	 * Recursive method for checking moves until legal. If illegal, will immediately break
-	 * 
-	 * 
-	 * @param move
-	 *            a copy of the last move, used for grabbing unassociated values
-	 * @param direction
-	 *            direction of moves to check in (horizontal or vertical)
-	 * @param movement
-	 *            movement of last move (left, right, up, down)
-	 * @param currentPlacement
-	 *            current spot of piece as it jumps
-	 * @param finalSpot
-	 *            ending spot. Needed for generalized base case (it covers rows and columns)
-	 * @return //recursive, but true if all jumps were legal
-	 */
-	public boolean isJumpingLegal(Move move, String direction, String movement,
-			int currentPlacement, int finalSpot) {
-
-		if (currentPlacement == finalSpot) {
-			return true;
-		} else {
-			if (direction.equals("horizontal")) {
-				if (movement.equals("left")) {
-					if (gameBoard[move.getRowFrom()][currentPlacement - 1]
-							.getColorValue().equals(empty)) {
-						return false;
-					} else {
-						return isJumpingLegal(move, direction, movement,
-								currentPlacement - 2, finalSpot);
-					}
-				} else {
-					if (gameBoard[move.getRowFrom()][currentPlacement + 1]
-							.getColorValue().equals(empty)) {
-						return false;
-					} else {
-						return isJumpingLegal(move, direction, movement,
-								currentPlacement + 2, finalSpot);
-					}
-				}
-			} else {
-				if (movement.equals("up")) {
-					if (gameBoard[currentPlacement - 1][move.getColFrom()]
-							.getColorValue().equals(empty)) {
-						return false;
-					} else {
-						return isJumpingLegal(move, direction, movement,
-								currentPlacement - 2, finalSpot);
-					}
-				} else {
-					if (gameBoard[currentPlacement + 1][move.getColFrom()]
-							.getColorValue().equals(empty)) {
-						return false;
-					} else {
-						return isJumpingLegal(move, direction, movement,
-								currentPlacement + 2, finalSpot);
-					}
-				}
-			}
-
-		}
-	}
-
-	/**
-	 * Checks if the input parameters constitute a valid move.
-	 * 
-	 * @param move
-	 *            Last move made
-	 * @param color
-	 *            Color making the last move
-	 * 
-	 * 
-	 * @return Boolean, depending on whether that move is allowed.
-	 */
-	public boolean isValidMove(Move move, String color) {
-		// I need to check multiple jumps,
-		try {
-			if (!gameBoard[move.getRowFrom()][move.getColFrom()].getColorValue().equals(color)){
-				return false;
-			}
-			if (!gameBoard[move.getRowTo()][move.getColTo()].getColorValue()
-					.equals(empty)) {	// a non-empty space we are jumping to
-				return false;
-			}
-			if ((((int) Math.abs(move.getColFrom() - move.getColTo())) % 2 != 0)
-					|| ((int) Math.abs(move.getRowFrom() - move.getRowTo())) % 2 != 0) {
-				// check if is an illegal square we land on
-				return false;
-			}
-
-			if (isMoveHorizontalOrVertical(move).equals("horizontal")) {
-
-				if (move.getColFrom() > move.getColTo()) {	// move is left
-					if (move.getColFrom() < 2 || move.getColTo() < 0) {	// boundary check
-						return false;
-					}
-					return isJumpingLegal(move, "horizontal", "left",
-							move.getColFrom(), move.getColTo());
-
-				} else if (move.getColFrom() < move.getColTo()) {					// move is right
-					if (move.getColFrom() > (boardSize - 2)
-							|| move.getColTo() > boardSize) {	// boundary check
-						return false;
-					}
-					return isJumpingLegal(move, "horizontal", "right",
-							move.getColFrom(), move.getColTo());
-
-				} else {	// same move spot
-					return false;
-				}
-
-			} else if (isMoveHorizontalOrVertical(move).equals("vertical")) {// vertical
-
-				if (move.getRowFrom() > move.getRowTo()) {	// move is up
-					if (move.getRowFrom() < 2 || move.getRowTo() < 0) {	// boundary check
-						return false;
-					}
-					return isJumpingLegal(move, "vertical", "up",
-							move.getRowFrom(), move.getRowTo());
-
-				} else if (move.getRowFrom() < move.getRowTo()) {					// move is right
-					if (move.getRowFrom() > (boardSize - 2)
-							|| move.getRowTo() > boardSize) {	// boundary check
-						return false;
-					}
-					return isJumpingLegal(move, "vertical", "down",
-							move.getRowFrom(), move.getRowTo());
-
-				} else {	// same move spot
-					return false;
-				}
-
-			} else {// error
-				return false;
-			}
-		} catch (NullPointerException e) {
-			return false;
 		}
 	}
 
@@ -397,40 +470,43 @@ public class Game {
 	 * @param color
 	 *            Color making the last move
 	 */
-	public void applyUpdate(Move move, String color) {
+	public void applyUpdate(Move move) {
+
 		int iterator;
-		gameBoard[move.getRowFrom()][move.getColFrom()].setColorValue(empty);
+		move.getTileFrom().setColorValue(empty);
 
-		if (isMoveHorizontalOrVertical(move).equals("horizontal")) { // move made across rows
-			iterator = move.getColFrom();
+		if (isMoveHorizontal(move)) {
+			iterator = move.getTileFrom().getColPlacement();
 
-			while (iterator > move.getColTo()) {
-				gameBoard[move.getRowFrom()][iterator].setColorValue(empty);
+			while (iterator > move.getTileTo().getColPlacement()) {
+				gameBoard[move.getTileFrom().getRowPlacement()][iterator].setColorValue(empty);
 				iterator--;
 			}
 
-			while (iterator < move.getColTo()) {
-				gameBoard[move.getRowFrom()][iterator].setColorValue(empty);
+			while (iterator < move.getTileTo().getColPlacement()) {
+				gameBoard[move.getTileFrom().getRowPlacement()][iterator].setColorValue(empty);
 				iterator++;
 			}
-
 		} else {
-			iterator = move.getRowFrom();
+			iterator = move.getTileFrom().getRowPlacement();
 
-			while (iterator > move.getRowTo()) {
-				gameBoard[iterator][move.getColFrom()].setColorValue(empty);
+			while (iterator > move.getTileTo().getRowPlacement()) {
+				gameBoard[iterator][move.getTileFrom().getColPlacement()].setColorValue(empty);
 				iterator--;
 			}
 
-			while (iterator < move.getRowTo()) {
-				gameBoard[iterator][move.getColFrom()].setColorValue(empty);
+			while (iterator < move.getTileTo().getRowPlacement()) {
+				gameBoard[iterator][move.getTileFrom().getColPlacement()].setColorValue(empty);
 				iterator++;
-
 			}
 		}
-		gameBoard[move.getRowTo()][move.getColTo()].setColorValue(color);
-		p1.updateStoredGameBoard(gameBoard);
-		p2.updateStoredGameBoard(gameBoard);
+		if (((move.getTileTo().getRowPlacement() + move.getTileTo().getColPlacement()) % 2) == 0) {
+			move.getTileTo().setColorValue(black);
+		} else {
+			move.getTileTo().setColorValue(white);
+		}
+		p1.updateStoredGameBoard(gameBoard, setOfAllPossibleBlackMoves, black);
+		p2.updateStoredGameBoard(gameBoard, setOfAllPossibleWhiteMoves, white);
 	}
 
 	/**
@@ -443,81 +519,60 @@ public class Game {
 	 * 
 	 * @return horizontal if rows match vertical if columns match
 	 */
-	public String isMoveHorizontalOrVertical(Move move) {
-		if (move.getRowFrom() == move.getRowTo()) {
-			return "horizontal";
-		} else if (move.getColFrom() == move.getColTo()) {
-			return "vertical";
-		} else {
-			System.out
-					.println("Error in isMoveHorizontalOrVertical method. Should be vert or horiz, nothing else.");
-			return null;
+	public boolean isMoveHorizontal(Move move) {
+		if (move.getTileFrom().getRowPlacement() == move.getTileTo().getRowPlacement()) {
+			return true;
 		}
+		return false;
 	}
 
-	/**
-	 * Checks if second move is valid -- that is, it is adjacent to the first move.
-	 * 
-	 * Assuming board is even and square.\
-	 * 
-	 * initialMove has format: [0] = row, [1] = column
-	 * 
-	 * 
-	 * @param rowChoice
-	 *            choice of row for second move
-	 * @param colChoice
-	 *            choice of column for second move
-	 * @param initialMove
-	 *            first move made by other player
-	 * 
-	 * @return true if valid move false if invalid move
-	 */
-	public boolean isValidSecondMove(Move initialMove, Move secondMove) {
-		int initialRow = initialMove.getSelectionMoveRow();
-		int initialCol = initialMove.getSelectionMoveCol();
-		int secondRow = secondMove.getSelectionMoveRow();
-		int secondCol = secondMove.getSelectionMoveCol();
+	public boolean isSameTile(Tile one, Tile two) {
+		boolean valid = false;
+		if (one.getRowPlacement() == two.getRowPlacement() && one.getColPlacement() == two.getColPlacement()) {
+			valid = true;
+		}
+		return valid;
+	}
 
-		if (initialRow == 0) { // upper left
-			if (secondRow == 1 && secondCol == 0) {
-				return true;
-			} else if (secondRow == 0 && secondCol == 1) {
-				return true;
+	public void buildSecondMoveSet(Move firstMove) {
+		if (firstMove.getTileSelectionMove().getRowPlacement() == 0) {
+			if (firstMove.getTileSelectionMove().getColPlacement() == 0) {
+				Move right = new Move(gameBoard[0][1]);
+				Move down = new Move(gameBoard[1][0]);
+				setOfAllPossibleStartingMoves.add(right);
+				setOfAllPossibleStartingMoves.add(down);
 			} else {
-				return false;
+				Move left = new Move(gameBoard[0][boardSize - 2]);
+				Move down = new Move(gameBoard[1][boardSize - 1]);
+				setOfAllPossibleStartingMoves.add(left);
+				setOfAllPossibleStartingMoves.add(down);
 			}
-		} else if (initialRow == (boardSize - 1)) { // lower right
-			if (secondRow == (boardSize - 1) && secondCol == (boardSize - 2)) {
-				return true;
-			} else if (secondRow == (boardSize - 2)
-					&& secondCol == (boardSize - 1)) {
-				return true;
+		} else if (firstMove.getTileSelectionMove().getRowPlacement() == boardSize - 1) {
+			if (firstMove.getTileSelectionMove().getColPlacement() == 0) {
+				Move right = new Move(gameBoard[boardSize - 1][1]);
+				Move up = new Move(gameBoard[boardSize - 2][0]);
+				setOfAllPossibleStartingMoves.add(right);
+				setOfAllPossibleStartingMoves.add(up);
 			} else {
-				return false;
+				Move left = new Move(gameBoard[boardSize - 1][boardSize - 2]);
+				Move up = new Move(gameBoard[boardSize - 2][boardSize - 1]);
+				setOfAllPossibleStartingMoves.add(left);
+				setOfAllPossibleStartingMoves.add(up);
 			}
-		} else { // middle
-			if (secondRow == initialRow) { // same row
-				if (secondCol == (initialCol + 1)) { // right
-					return true;
-				} else if (secondCol == (initialCol - 1)) { // left
-					return true;
-				} else {
-					return false;
-				}
-			} else if (secondCol == initialCol) { // same col
-				if (secondRow == (initialRow + 1)) { // below
-					return true;
-				} else if (secondRow == (initialRow - 1)) { // above
-					return true;
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
+		} else {
+			Move left = new Move(
+					gameBoard[firstMove.getTileSelectionMove().getRowPlacement()][firstMove.getTileSelectionMove().getColPlacement() - 1]);
+			Move right = new Move(
+					gameBoard[firstMove.getTileSelectionMove().getRowPlacement()][firstMove.getTileSelectionMove().getColPlacement() + 1]);
+			Move up = new Move(gameBoard[firstMove.getTileSelectionMove().getRowPlacement() - 1][firstMove.getTileSelectionMove().getColPlacement()]);
+			Move down = new Move(
+					gameBoard[firstMove.getTileSelectionMove().getRowPlacement() + 1][firstMove.getTileSelectionMove().getColPlacement()]);
+			setOfAllPossibleStartingMoves.add(left);
+			setOfAllPossibleStartingMoves.add(up);
+			setOfAllPossibleStartingMoves.add(right);
+			setOfAllPossibleStartingMoves.add(down);
 
 		}
-
 	}
 
 	/**
@@ -528,14 +583,27 @@ public class Game {
 	 *            First move made by other player
 	 */
 	public void secondMove(Move initialMove) {
-		p2.updateStoredGameBoard(gameBoard);
-		Move secondMove = p2.secondMove();
-		while (!isValidSecondMove(initialMove, secondMove)) {
-			System.out.println("Wrong second move! Try again p2!");
-			secondMove = p2.secondMove();
+		boolean valid = false;
+		buildSecondMoveSet(initialMove);
+		p2.updateStoredGameBoard(gameBoard, setOfAllPossibleWhiteMoves, white);
+		Move secondMove;
+		if (p2.getPlayerType().equals("Human")) {
+			do {
+				System.out.println("Wrong second move! Try again p2!");
+				secondMove = p2.secondMove(setOfAllPossibleStartingMoves);
+				for (Move iter : setOfAllPossibleStartingMoves) {
+					if (isSameTile(secondMove.getTileSelectionMove(), iter.getTileSelectionMove())) {
+						valid = true;
+						break;
+					}
+				}
+
+			} while (!valid);
+		} else {
+			secondMove = p2.secondMove(setOfAllPossibleStartingMoves);
 		}
-		gameBoard[secondMove.getSelectionMoveRow()][secondMove
-				.getSelectionMoveCol()].setColorValue(empty);
+		setOfAllPossibleStartingMoves.clear();
+		secondMove.getTileSelectionMove().setColorValue(empty);
 	}
 
 	/**
@@ -546,8 +614,7 @@ public class Game {
 	 *            Player that sees the board next
 	 */
 	public void printMove(String player) {
-		System.out.format("Your move, %s.\nThe board looks like this:\n\n",
-				player);
+		System.out.format("Your move, %s.\nThe board looks like this:\n\n", player);
 		printBoard();
 	}
 
@@ -558,50 +625,27 @@ public class Game {
 	 * @return first move choice. Needed for validity of second move.
 	 */
 	public Move firstMove() {
-		p1.updateStoredGameBoard(gameBoard);
-		Move firstMove = p1.firstMove();
-		while (!isValidStartingMove(firstMove)) {
-			System.out.println("Bad starting move. Try again P1.");
-			firstMove = p1.firstMove();
-		}
+		boolean valid = false;
+		p1.updateStoredGameBoard(gameBoard, setOfAllPossibleBlackMoves, black);
+		Move firstMove = null;
+		if (p1.getPlayerType().equals("Human")) {
+			do {
+				System.out.println("Bad starting move. Try again P1.");
+				firstMove = p1.firstMove(setOfAllPossibleStartingMoves);
+				for (Move iter : setOfAllPossibleStartingMoves) {
+					if (isSameTile(firstMove.getTileSelectionMove(), iter.getTileSelectionMove())) {
+						valid = true;
+						break;
+					}
+				}
 
-		gameBoard[firstMove.getSelectionMoveRow()][firstMove
-				.getSelectionMoveCol()].setColorValue(empty);
-		return (firstMove);
-	}
-
-	/**
-	 * Checks if a starting move is in the 4 corners of the board, or the 4 middle corners.
-	 * 
-	 * The assignment asks for only even squares.. If time persists, will put in logic to deal with
-	 * odd squares.
-	 * 
-	 * 
-	 * @param rowChoice
-	 *            choice of first row
-	 * @param colChoice
-	 *            choice of first column
-	 * 
-	 * 
-	 * @return true if valid starting move false if invalid starting move
-	 */
-	public boolean isValidStartingMove(Move move) {
-		int rowChoice = move.getSelectionMoveRow();
-		int colChoice = move.getSelectionMoveCol();
-
-		int middleOfPuzzle = boardSize / 2;
-		if (rowChoice == colChoice) {
-			if (rowChoice == middleOfPuzzle
-					|| rowChoice == (middleOfPuzzle - 1)) { // rowChoice = colChoice already
-				return true;
-			} else if ((rowChoice == 0) || (rowChoice == boardSize - 1)) {
-				return true;
-			} else {
-				return false;
-			}
+			} while (!valid);
 		} else {
-			return false;
+			firstMove = p1.firstMove(setOfAllPossibleStartingMoves);
 		}
+		setOfAllPossibleStartingMoves.clear();
+		firstMove.getTileSelectionMove().setColorValue(empty);
+		return firstMove;
 	}
 
 	/**
@@ -609,8 +653,8 @@ public class Game {
 	 */
 	public void printPlayerMenu() {
 		System.out.println("1: Human Player");
-		System.out.println("2: MiniMax with alpha/beta pruning");
-		System.out.println("3: MiniMax without alpah/beta pruning");
+		System.out.println("2: MiniMax without alpha/beta pruning");
+		System.out.println("3: MiniMax with alpah/beta pruning");
 	}
 
 	/**
@@ -640,14 +684,22 @@ public class Game {
 			retVal = new Human(color);
 			break;
 		case 2:
-			retVal = new MiniMaxWithAB(color);
+			int treeDepth = promptTreeDepth();
+			retVal = new MiniMaxWithoutAB(color, treeDepth);
 			break;
 		case 3:
-			retVal = new MiniMaxWithoutAB(color);
+			int treeDepth3 = promptTreeDepth();
+			retVal = new MiniMaxWithAB(color, treeDepth3);
 			break;
 		}
 
 		return retVal;
+	}
+
+	public int promptTreeDepth() {
+		Scanner in = new Scanner(System.in);
+		System.out.println("Enter the depth of the tree for this AI player.");
+		return in.nextInt();
 	}
 
 	/**
@@ -659,8 +711,7 @@ public class Game {
 		int choice;
 		Scanner scan = new Scanner(System.in);
 		while (p1 == null) {
-			System.out
-					.println("Select player 1 -- PLAYER 1 WILL BE BLACK AND GO FIRST");
+			System.out.println("Select player 1 -- PLAYER 1 WILL BE BLACK AND GO FIRST");
 			printPlayerMenu();
 			choice = scan.nextInt();
 
@@ -670,8 +721,7 @@ public class Game {
 			}
 		}
 		while (p2 == null) {
-			System.out
-					.println("Select player 2 -- PLAYER 2 WILL BE WHITE AND GO SECOND");
+			System.out.println("Select player 2 -- PLAYER 2 WILL BE WHITE AND GO SECOND");
 			printPlayerMenu();
 			choice = scan.nextInt();
 
@@ -693,9 +743,9 @@ public class Game {
 		for (int i = 0; i < boardSize; i++) {
 			for (int j = 0; j < boardSize; j++) {
 				if ((i + j) % 2 == 0) {
-					gameBoard[i][j] = new Tile(black);
+					gameBoard[i][j] = new Tile(black, i, j, boardSize);
 				} else {
-					gameBoard[i][j] = new Tile(white);
+					gameBoard[i][j] = new Tile(white, i, j, boardSize);
 				}
 			}
 		}
@@ -710,7 +760,7 @@ public class Game {
 	 * @return formatted line representing length of board as dashes "--"
 	 */
 	public String printBoardLine() {
-		String line = " ";
+		String line = "";
 		for (int i = 0; i < ((boardSize * 4) + 1); i++) {
 			line += "-";
 		}
