@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class MiniMaxWithoutAB extends Player {
 	private int treeDepth;
-	private boolean player1;		// 1 for black, 0 for white
+	private boolean player1;	// 1 for black, 0 for white
 	private int boardSize;
 	private int counter = 1;
 
@@ -55,45 +55,38 @@ public class MiniMaxWithoutAB extends Player {
 	public Move minimax(Tile[][] gameState) {
 		Tile[][] nextState = gameState;
 		int x = minValue(nextState);
-		boolean rightMove = true;
+
+		printBoard(nextState);
 
 		for (Move moves : action(gameState)) {
-
+			boolean valid = true;
 			Tile[][] checkState = nextState.clone();
 			undoMove(checkState, moves);
 
 			for (int i = 0; i < boardSize; i++) {
 				for (int j = 0; j < boardSize; j++) {
 					if (!checkState[i][j].getColorValue().equals(nextState[i][j].getColorValue())) {
-						rightMove = false;
+						valid = false;
 					}
-					if (!rightMove) {
-						break;
-					}
-				}
-				if (!rightMove) {
-					break;
 				}
 			}
-			if (rightMove) {
+			if (valid) {
 				return moves;
 			}
 		}
-		
+
 		return null;
 
 	}
 
 	public int maxValue(Tile[][] state) {
 
-		Tile[][] holdState = state.clone();
-		if (terminalTest(holdState.clone(), true) || counter == treeDepth) {
-			return utilityFunction(holdState.clone(), true);
+		if (terminalTest(state, true) || counter == treeDepth) {
+			return utilityFunction(state, true);
 		}
 		counter++;
 
-		printMoves(constructWhiteMoveSet(holdState.clone()));
-		ArrayList<Move> possibleMoves = constructWhiteMoveSet(holdState.clone());
+		ArrayList<Move> possibleMoves = constructWhiteMoveSet(state);
 		int max = Integer.MIN_VALUE;
 		for (Move possibleMove : possibleMoves) {
 			max = Math.max(max, minValue(result(state, possibleMove)));
@@ -107,13 +100,13 @@ public class MiniMaxWithoutAB extends Player {
 			return utilityFunction(state, false);
 		}
 		counter++;
-		printMoves(constructBlackMoveSet(state));
 		ArrayList<Move> possibleMoves = constructBlackMoveSet(state);
 
 		int min = Integer.MAX_VALUE;
 		for (Move possibleMove : possibleMoves) {
 			min = Math.min(min, maxValue(result(state, possibleMove)));
-			state = undoMove(state, possibleMove);							// /omg I literally spent 10 hours on this problem
+			state = undoMove(state, possibleMove);	// /omg I literally spent 10 hours on this
+													// problem
 			// (pass by reference issues with a game state
 			// object)
 		}
@@ -121,83 +114,95 @@ public class MiniMaxWithoutAB extends Player {
 	}
 
 	public Tile[][] undoMove(Tile[][] state, Move move) {
+		Tile[][] stateToReturn = state;
 		int iterator;
 		if ((move.getTileTo().getRowPlacement() + move.getTileTo().getColPlacement()) % 2 == 0) {
 			if (isMoveHorizontal(move)) {
 				iterator = move.getTileTo().getColPlacement();
-				state[move.getTileTo().getRowPlacement()][iterator].setColorValue(empty);
-				while (iterator < move.getTileFrom().getColPlacement()) {
+				stateToReturn[move.getTileTo().getRowPlacement()][iterator].setColorValue(empty);
+				while (iterator <= move.getTileFrom().getColPlacement()) {
+
+					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 1) {
+						stateToReturn[move.getTileTo().getRowPlacement()][iterator].setColorValue(white);
+					}
 					iterator++;
-					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 1) {
-						state[move.getTileTo().getRowPlacement()][iterator].setColorValue(white);
-					}
 				}
-				while (iterator > move.getTileFrom().getColPlacement()) {
+				iterator = move.getTileTo().getColPlacement();
+				while (iterator >= move.getTileFrom().getColPlacement()) {
+
+					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 1) {
+						stateToReturn[move.getTileTo().getRowPlacement()][iterator].setColorValue(white);
+					}
 					iterator--;
-					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 1) {
-						state[move.getTileTo().getRowPlacement()][iterator].setColorValue(white);
-					}
 				}
-				state[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(black);
+				stateToReturn[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(black);
 			} else {
 				iterator = move.getTileTo().getRowPlacement();
-				state[iterator][move.getTileTo().getColPlacement()].setColorValue(empty);
-				while (iterator < move.getTileFrom().getRowPlacement()) {
+				stateToReturn[iterator][move.getTileTo().getColPlacement()].setColorValue(empty);
+				while (iterator <= move.getTileFrom().getRowPlacement()) {
+
+					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 1) {
+						stateToReturn[iterator][move.getTileTo().getColPlacement()].setColorValue(white);
+					}
 					iterator++;
-					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 1) {
-						state[iterator][move.getTileTo().getColPlacement()].setColorValue(white);
-					}
 				}
-				while (iterator < move.getTileFrom().getRowPlacement()) {
+				iterator = move.getTileTo().getRowPlacement();
+				while (iterator >= move.getTileFrom().getRowPlacement()) {
+
+					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 1) {
+						stateToReturn[iterator][move.getTileTo().getColPlacement()].setColorValue(white);
+					}
 					iterator--;
-					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 1) {
-						state[iterator][move.getTileTo().getColPlacement()].setColorValue(white);
-					}
 				}
-				state[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(black);
+				stateToReturn[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(black);
 			}
 		} else {
 			if (isMoveHorizontal(move)) {
 				iterator = move.getTileTo().getColPlacement();
-				state[move.getTileTo().getRowPlacement()][iterator].setColorValue(empty);
-				while (iterator < move.getTileFrom().getColPlacement()) {
+				stateToReturn[move.getTileTo().getRowPlacement()][iterator].setColorValue(empty);
+				while (iterator <= move.getTileFrom().getColPlacement()) {
+
+					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 0) {
+						stateToReturn[move.getTileTo().getRowPlacement()][iterator].setColorValue(black);
+					}
 					iterator++;
-					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 0) {
-						state[move.getTileTo().getRowPlacement()][iterator].setColorValue(black);
-					}
 				}
-				while (iterator > move.getTileFrom().getColPlacement()) {
+				iterator = move.getTileTo().getColPlacement();
+				while (iterator >= move.getTileFrom().getColPlacement()) {
+
+					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 0) {
+						stateToReturn[move.getTileTo().getRowPlacement()][iterator].setColorValue(black);
+					}
 					iterator--;
-					if ((move.getTileTo().getRowPlacement() + iterator) % 2 == 0) {
-						state[move.getTileTo().getRowPlacement()][iterator].setColorValue(black);
-					}
 				}
-				state[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(white);
+				stateToReturn[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(white);
 			} else {
 				iterator = move.getTileTo().getRowPlacement();
-				state[iterator][move.getTileTo().getColPlacement()].setColorValue(empty);
-				while (iterator < move.getTileFrom().getRowPlacement()) {
+				stateToReturn[iterator][move.getTileTo().getColPlacement()].setColorValue(empty);
+				while (iterator <= move.getTileFrom().getRowPlacement()) {
+
+					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 0) {
+						stateToReturn[iterator][move.getTileTo().getColPlacement()].setColorValue(black);
+					}
 					iterator++;
-					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 0) {
-						state[iterator][move.getTileTo().getColPlacement()].setColorValue(black);
-					}
 				}
-				while (iterator < move.getTileFrom().getRowPlacement()) {
+				iterator = move.getTileTo().getRowPlacement();
+				while (iterator >= move.getTileFrom().getRowPlacement()) {
+
+					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 0) {
+						stateToReturn[iterator][move.getTileTo().getColPlacement()].setColorValue(black);
+					}
 					iterator--;
-					if ((move.getTileTo().getColPlacement() + iterator) % 2 == 0) {
-						state[iterator][move.getTileTo().getColPlacement()].setColorValue(black);
-					}
 				}
-				state[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(white);
+				stateToReturn[move.getTileFrom().getRowPlacement()][move.getTileFrom().getColPlacement()].setColorValue(white);
 			}
 
 		}
-		return state;
-
+		return stateToReturn;
 	}
 
 	public boolean terminalTest(Tile[][] gameState, boolean player) {	// 1 FOR BLACK PLAYER, 0 FOR
-																		// WHITE
+		// WHITE
 		if (player) {
 			if (constructBlackMoveSet(gameState).isEmpty()) {
 				return true;
@@ -487,7 +492,7 @@ public class MiniMaxWithoutAB extends Player {
 	 */
 	public boolean isRightMove(int row, int column, Move moveToReturn, Tile[][] gameState) {
 		if (column == (boardSize - 1) || column == (boardSize - 2)) {	// can't check right with that
-																		// few spots
+			// few spots
 			return false;
 		} else {
 			if (gameState[row][column + 1].getColorValue().equals(empty)) {
@@ -542,7 +547,7 @@ public class MiniMaxWithoutAB extends Player {
 	 */
 	public boolean isDownMove(int row, int column, Move moveToReturn, Tile[][] gameState) {
 		if (row == (boardSize - 1) || row == (boardSize - 2)) {	// can't check up with that few
-																// spots
+			// spots
 			return false;
 		} else {
 			if (gameState[row + 1][column].getColorValue().equals(empty)) {

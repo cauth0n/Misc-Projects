@@ -13,18 +13,33 @@ public class Game {
 	protected final String empty = "Empty";
 
 	/*
-	 * Players in our game. 
+	 * Players in our game.
 	 */
 	private Player p1;
 	private Player p2;
 	private Player winner;
+	
+	
+	private boolean p1Win;
 
+	private double minp1TimePerMove = Integer.MAX_VALUE;
+	private double maxp1TimePerMove = Integer.MIN_VALUE;
+	private double p1TimePerMove = 0;
+
+	private int p1MoveNumber = 0;
+	private int p2MoveNumber = 0;
+
+	private double minp2TimePerMove = Integer.MAX_VALUE;
+	private double maxp2TimePerMove = Integer.MIN_VALUE;
+	private double p2TimePerMove = 0;
 	/*
-	 * Game information. gameBoard is the copy of our current game, from server-side. Note that it can only be editted from this side,
-	 * but copies can be made of it and manipulated.
+	 * Game information. gameBoard is the copy of our current game, from server-side. Note that it
+	 * can only be editted from this side, but copies can be made of it and manipulated.
 	 */
 	private int boardSize;
 	private Tile[][] gameBoard;
+
+	
 	
 	/*
 	 * ArrayList of moves at any state
@@ -36,12 +51,48 @@ public class Game {
 	/**
 	 * Constructor -- calls init() which handles game sequencing.
 	 * 
-	 * @param boardSize defines the size of the gameBoard that will be played on.
+	 * @param boardSize
+	 *            defines the size of the gameBoard that will be played on.
 	 */
 	public Game(int boardSize) {
 		this.boardSize = boardSize;
 		gameBoard = new Tile[boardSize][boardSize];
 		init();
+	}
+
+	public Game(int boardSize, int player1Type, int player1Depth, int player2Type, int player2Depth) {
+		this.boardSize = boardSize;
+		gameBoard = new Tile[boardSize][boardSize];
+		compyInit(player1Type, player1Depth, player2Type, player2Depth);
+	}
+
+	public void compyInit(int player1Type, int player1Depth, int player2Type, int player2Depth) {
+		p1 = null;
+		p2 = null;
+		switch (player1Type) {
+		case 2:
+			p1 = new MiniMaxWithoutAB(black, player1Depth);
+			break;
+		case 3:
+			p1 = new MiniMaxWithAB(black, player1Depth);
+			break;
+		}
+		switch (player2Type) {
+		case 2:
+			p2 = new MiniMaxWithoutAB(white, player2Depth);
+			break;
+		case 3:
+			p2 = new MiniMaxWithAB(white, player2Depth);
+			break;
+		}
+		initializeGame();
+		buildFirstMoveSet();
+		secondMove(firstMove());
+		printBoard();
+		p1MoveNumber = 0;
+		p2MoveNumber = 0;
+		loopManager();
+
 	}
 
 	/**
@@ -57,7 +108,8 @@ public class Game {
 	}
 
 	/**
-	 * Recursive method that continues adding moves to an arrayList passed by reference until the boardLimits are reached.
+	 * Recursive method that continues adding moves to an arrayList passed by reference until the
+	 * boardLimits are reached.
 	 * 
 	 * @param row
 	 * @param col
@@ -268,8 +320,23 @@ public class Game {
 					isGameFinished = true;
 					break;
 				}
-
+				
+				double p1StartTimer = System.nanoTime();
 				p1ValueToUpdate = p1.makeAMove();
+				double p1EndTimer = System.nanoTime();
+				p1MoveNumber++;
+
+				double p1MoveTime = p1EndTimer - p1StartTimer;
+				
+				System.out.println(p1MoveTime);
+				if (p1MoveTime > maxp1TimePerMove) {
+					maxp1TimePerMove = p1MoveTime;
+				}
+				if (p1MoveTime < minp1TimePerMove && (p1MoveTime > 0)) {
+					minp1TimePerMove = p1MoveTime;
+				}
+
+				p1TimePerMove += p1MoveTime;
 				if (p1.getPlayerType().equals("Human")) {
 					for (Move move : setOfAllPossibleBlackMoves) {
 						if (isSameMove(p1ValueToUpdate, move)) {
@@ -283,6 +350,7 @@ public class Game {
 					p1Move = true;
 					setOfAllPossibleBlackMoves.clear();
 				}
+
 			}
 			if (isGameFinished) {
 				break;
@@ -301,9 +369,27 @@ public class Game {
 					isGameFinished = true;
 					break;
 				}
-
+				
+				
+				double p2StartTimer = System.nanoTime();
 				p2ValueToUpdate = p2.makeAMove();
-				if (p1.getPlayerType().equals("Human")) {
+				double p2EndTimer = System.nanoTime();
+				
+				p2MoveNumber++;
+				double p2MoveTime = p2EndTimer - p2StartTimer;
+				System.out.println(p2MoveTime);
+				if (p2MoveTime > maxp2TimePerMove) {
+					maxp2TimePerMove = p2MoveTime;
+				}
+				if (p2MoveTime < minp2TimePerMove && p2MoveTime > 0) {
+					minp2TimePerMove = p2MoveTime;
+				}
+
+				p2TimePerMove += p2MoveTime;
+				
+				
+				
+				if (p2.getPlayerType().equals("Human")) {
 					for (Move move : setOfAllPossibleWhiteMoves) {
 						if (isSameMove(p2ValueToUpdate, move)) {
 							p2Move = true;
@@ -316,6 +402,7 @@ public class Game {
 					p2Move = true;
 					setOfAllPossibleWhiteMoves.clear();
 				}
+
 			}
 			if (isGameFinished) {
 				break;
@@ -328,8 +415,10 @@ public class Game {
 	public void printWinner() {
 		if (winner.getColorValue().equals(black)) {
 			System.out.println("Player 1 wins!!!!");
+			p1Win = true;
 		} else {
 			System.out.println("Player 2 wins!!!!");
+			p1Win = false;
 		}
 	}
 
@@ -797,6 +886,39 @@ public class Game {
 	 */
 	public Tile[][] getGameBoard() {
 		return gameBoard;
+	}
+	public double getMinp1TimePerMove() {
+		return minp1TimePerMove;
+	}
+
+	public double getMaxp1TimePerMove() {
+		return maxp1TimePerMove;
+	}
+
+	public double getP1TimePerMove() {
+		return p1TimePerMove / p1MoveNumber;
+	}
+
+	public double getMinp2TimePerMove() {
+		return minp2TimePerMove;
+	}
+
+	public double getMaxp2TimePerMove() {
+		return maxp2TimePerMove;
+	}
+
+	public double getP2TimePerMove() {
+		return p2TimePerMove / p2MoveNumber;
+	}
+	
+	public boolean getWinner(){
+		return p1Win;
+	}
+	public int getP1Moves(){
+		return p1MoveNumber;
+	}
+	public int getP2Moves(){
+		return p2MoveNumber;
 	}
 
 }
